@@ -43,7 +43,7 @@ void entryRoutine(byte *cardUID)
 	if (module.checkAccess(cardUID))
 	{
 		module.engageLock();
-		delay(5000);
+		delay(1000);
 		module.disengageLock();
 	}
 	else
