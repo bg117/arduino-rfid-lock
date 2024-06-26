@@ -3,6 +3,17 @@
 #include <EEPROM.h>
 #include <SPI.h>
 
+bool uidExistsInRecord(byte *uid, const EEPROMAccessRecord &record)
+{
+	for (int i = 0; i < record.count; i++)
+	{
+		if (memcmp(uid, record.uids[i], 4) == 0)
+			return true;
+	}
+
+	return false;
+}
+
 void Module::init()
 {
 	// initialize the pins
@@ -13,7 +24,7 @@ void Module::init()
 	pinMode(Y_LED_PIN, OUTPUT);
 	pinMode(KEY_PIN, INPUT);
 	pinMode(RELAY_PIN, OUTPUT);
-	
+
 	Serial.begin(9600); // initialize serial communication
 	while (!Serial)
 		; // wait for serial port to connect
@@ -62,6 +73,10 @@ bool Module::writeAccessRecord(byte *cardUID)
 	// check if the record is full
 	if (accessRecord.count >= 255)
 		return false; // record is full; fail
+
+	// if exists, return true
+	if (uidExistsInRecord(cardUID, accessRecord))
+		return true;
 
 	// write the card UID to EEPROM
 	memcpy(accessRecord.uids[accessRecord.count], cardUID, 4); // copy the UID to the collection
