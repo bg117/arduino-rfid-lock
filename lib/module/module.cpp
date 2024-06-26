@@ -25,17 +25,10 @@ void Module::init()
 	pinMode(KEY_PIN, INPUT);
 	pinMode(RELAY_PIN, OUTPUT);
 
-	Serial.begin(9600); // initialize serial communication
-	while (!Serial)
-		; // wait for serial port to connect
-
 	SPI.begin(); // initialize SPI bus
 
 	// initialize the RC522 module
 	mfrc522.PCD_Init();
-
-	// write firmware version to serial
-	mfrc522.PCD_DumpVersionToSerial();
 
 	// read the access record from EEPROM
 	EEPROM.get(0, accessRecord);
