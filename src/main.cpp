@@ -11,8 +11,15 @@ void setup()
 
 void loop()
 {
-    bool keyInserted = digitalRead(Module::KEY_PIN);
-    digitalWrite(Module::Y_LED_PIN, keyInserted ? HIGH : LOW); // turn on yellow LED if key is inserted
+    static bool lit = false; // keep track of the key lock switch state every loop
+    bool keyInserted = digitalRead(Module::KEY_PIN) == HIGH;
+
+    // if the key lock switch state has changed
+    if (lit != keyInserted)
+    {
+        lit = keyInserted;
+        digitalWrite(Module::Y_LED_PIN, keyInserted ? HIGH : LOW); // turn on yellow LED if key is inserted
+    }
 
     byte *cardUID;
     bool readStatus = module.readCardUID(cardUID);
@@ -43,7 +50,7 @@ void entryRoutine(byte *cardUID)
     if (module.checkAccess(cardUID))
     {
         module.engageLock();
-        delay(1000);
+        delay(2000);
         module.disengageLock();
     }
     else
