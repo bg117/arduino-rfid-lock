@@ -1,7 +1,19 @@
 #include "module.h"
 
+#include <EEPROM.h>
+#include <SPI.h>
+
 void Module::init()
 {
+	// initialize the pins
+	pinMode(RST_PIN, OUTPUT);
+	pinMode(SS_PIN, OUTPUT);
+	pinMode(R_LED_PIN, OUTPUT);
+	pinMode(G_LED_PIN, OUTPUT);
+	pinMode(Y_LED_PIN, OUTPUT);
+	pinMode(KEY_PIN, INPUT);
+	pinMode(RELAY_PIN, OUTPUT);
+	
 	Serial.begin(9600); // initialize serial communication
 	while (!Serial)
 		; // wait for serial port to connect
@@ -13,15 +25,6 @@ void Module::init()
 
 	// write firmware version to serial
 	mfrc522.PCD_DumpVersionToSerial();
-
-	// initialize the pins
-	pinMode(RST_PIN, OUTPUT);
-	pinMode(SS_PIN, OUTPUT);
-	pinMode(R_LED_PIN, OUTPUT);
-	pinMode(G_LED_PIN, OUTPUT);
-	pinMode(Y_LED_PIN, OUTPUT);
-	pinMode(KEY_PIN, INPUT);
-	pinMode(RELAY_PIN, OUTPUT);
 
 	// read the access record from EEPROM
 	EEPROM.get(0, accessRecord);
