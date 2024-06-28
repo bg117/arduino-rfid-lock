@@ -15,8 +15,8 @@ public:
     void init();
 
     bool readCardUID(byte *&cardUID);
-    bool checkAccess(byte *detected);
-    bool writeAccessRecord(byte *cardUID);
+    bool checkAccess(const byte *&cardUID);
+    bool writeAccessRecord(const byte *&cardUID);
 
 private:
     // for RC522
