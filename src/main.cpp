@@ -15,9 +15,10 @@ namespace
     // relay pin for solenoid lock control
     constexpr int RELAY_PIN = 6;
 
-    void entryRoutine(byte *cardUID);
+    void entryRoutine(byte *const &cardUID);
     void engageLock();
     void disengageLock();
+    void delayWhileNoNewCard(byte *const &cardUID);
 }
 
 void setup()
@@ -57,7 +58,7 @@ void loop()
         else
             digitalWrite(R_LED_PIN, HIGH); // turn on red LED if failed
 
-        delay(1000);
+        delayWhileNoNewCard(cardUID); // wait for the card to be removed
         digitalWrite(G_LED_PIN, LOW);
         digitalWrite(R_LED_PIN, LOW);
     }
@@ -69,19 +70,19 @@ void loop()
 
 namespace
 {
-    void entryRoutine(byte *cardUID)
+    void entryRoutine(byte *const &cardUID)
     {
         // check if the detected card is in the access record
         if (module.checkAccess(cardUID))
         {
             engageLock();
-            delay(2000);
+            delayWhileNoNewCard(cardUID); // wait for the card to be removed
             disengageLock();
         }
         else
         {
             digitalWrite(R_LED_PIN, HIGH);
-            delay(1000);
+            delayWhileNoNewCard(cardUID); // wait for the card to be removed
             digitalWrite(R_LED_PIN, LOW);
         }
     }
@@ -98,5 +99,24 @@ namespace
         // turn off green LED and relay
         digitalWrite(G_LED_PIN, LOW);
         digitalWrite(RELAY_PIN, LOW);
+    }
+
+    void delayWhileNoNewCard(byte *const &cardUID)
+    {
+        byte *newUID;         // dummy variable
+        bool firstRep = true; // first repetition flag
+        do
+        {
+            // if it's the first repetition, delay for 2 seconds
+            if (firstRep)
+            {
+                firstRep = false;
+                delay(2000);
+            }
+            else
+            {
+                delay(1000);
+            }
+        } while (module.readCardUID(newUID) && newUID == cardUID); // keep reading until a new card is detected
     }
 }
