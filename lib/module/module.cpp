@@ -62,6 +62,8 @@ bool Module::writeAccessRecord(byte *const &cardUID)
 
 bool Module::readCardUID(byte *&cardUID)
 {
+    cardUID = nullptr;
+    
     // look for new cards
     if (!m_mfrc522.PICC_IsNewCardPresent())
         return false;
