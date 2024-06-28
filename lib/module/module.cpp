@@ -19,62 +19,43 @@ void Module::init()
     // initialize the pins
     pinMode(RST_PIN, OUTPUT);
     pinMode(SS_PIN, OUTPUT);
-    pinMode(R_LED_PIN, OUTPUT);
-    pinMode(G_LED_PIN, OUTPUT);
-    pinMode(Y_LED_PIN, OUTPUT);
-    pinMode(KEY_PIN, INPUT);
-    pinMode(RELAY_PIN, OUTPUT);
 
     SPI.begin(); // initialize SPI bus
 
     // initialize the RC522 module
-    mfrc522.PCD_Init();
+    m_mfrc522.PCD_Init();
 
     // read the access record from EEPROM
-    EEPROM.get(0, accessRecord);
+    EEPROM.get(0, m_accessRecord);
 }
 
 bool Module::checkAccess(byte *detected)
 {
     // for each record in the accessRecord collection
-    for (int i = 0; i < accessRecord.count; i++)
+    for (int i = 0; i < m_accessRecord.count; i++)
     {
         // compare the detected UID with the stored UID
-        if (memcmp(detected, accessRecord.uids[i], 4) == 0)
+        if (memcmp(detected, m_accessRecord.uids[i], 4) == 0)
             return true;
     }
 
     return false;
 }
 
-void Module::engageLock()
-{
-    // turn on green LED and relay
-    digitalWrite(G_LED_PIN, HIGH);
-    digitalWrite(RELAY_PIN, HIGH);
-}
-
-void Module::disengageLock()
-{
-    // turn off green LED and relay
-    digitalWrite(G_LED_PIN, LOW);
-    digitalWrite(RELAY_PIN, LOW);
-}
-
 bool Module::writeAccessRecord(byte *cardUID)
 {
     // check if the record is full
-    if (accessRecord.count >= 255)
+    if (m_accessRecord.count >= 255)
         return false; // record is full; fail
 
     // if exists, return true
-    if (uidExistsInRecord(cardUID, accessRecord))
+    if (uidExistsInRecord(cardUID, m_accessRecord))
         return true;
 
     // write the card UID to EEPROM
-    memcpy(accessRecord.uids[accessRecord.count], cardUID, 4); // copy the UID to the collection
-    accessRecord.count++;									   // increment the record count
-    EEPROM.put(0, accessRecord);
+    memcpy(m_accessRecord.uids[m_accessRecord.count], cardUID, 4); // copy the UID to the collection
+    m_accessRecord.count++;                                        // increment the record count
+    EEPROM.put(0, m_accessRecord);
 
     return true;
 }
@@ -82,14 +63,14 @@ bool Module::writeAccessRecord(byte *cardUID)
 bool Module::readCardUID(byte *&cardUID)
 {
     // look for new cards
-    if (!mfrc522.PICC_IsNewCardPresent())
+    if (!m_mfrc522.PICC_IsNewCardPresent())
         return false;
 
     // select one of the cards
-    if (!mfrc522.PICC_ReadCardSerial())
+    if (!m_mfrc522.PICC_ReadCardSerial())
         return false;
 
     // return the UID
-    cardUID = mfrc522.uid.uidByte;
+    cardUID = m_mfrc522.uid.uidByte;
     return true;
 }
