@@ -15,6 +15,9 @@ namespace
     // relay pin for solenoid lock control
     constexpr int RELAY_PIN = 6;
 
+    constexpr bool RELAY_LOW = HIGH;
+    constexpr bool RELAY_HIGH = LOW;
+
     void entryRoutine(byte *const &cardUID);
     void engageLock();
     void disengageLock();
@@ -30,6 +33,7 @@ void setup()
     pinMode(G_LED_PIN, OUTPUT);
     pinMode(Y_LED_PIN, OUTPUT);
     pinMode(KEY_PIN, INPUT);
+    digitalWrite(RELAY_PIN, RELAY_LOW); // turn off the relay (default state)
     pinMode(RELAY_PIN, OUTPUT);
 }
 
