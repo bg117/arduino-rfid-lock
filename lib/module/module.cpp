@@ -3,7 +3,7 @@
 #include <EEPROM.h>
 #include <SPI.h>
 
-bool uidExistsInRecord(const byte *&uid, const EEPROMAccessRecord &record)
+bool uidExistsInRecord(byte *const &uid, const EEPROMAccessRecord &record)
 {
     for (int i = 0; i < record.count; i++)
     {
@@ -29,7 +29,7 @@ void Module::init()
     EEPROM.get(0, m_accessRecord);
 }
 
-bool Module::checkAccess(const byte *&detected)
+bool Module::checkAccess(byte *const &detected)
 {
     // for each record in the accessRecord collection
     for (int i = 0; i < m_accessRecord.count; i++)
@@ -42,7 +42,7 @@ bool Module::checkAccess(const byte *&detected)
     return false;
 }
 
-bool Module::writeAccessRecord(const byte *&cardUID)
+bool Module::writeAccessRecord(byte *const &cardUID)
 {
     // check if the record is full
     if (m_accessRecord.count >= 255)
