@@ -25,4 +25,6 @@ private:
 
     MFRC522 m_mfrc522 = MFRC522(SS_PIN, RST_PIN);
     EEPROMAccessRecord m_accessRecord;
+
+    bool isNewCardPresent();
 };

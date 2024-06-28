@@ -63,16 +63,23 @@ bool Module::writeAccessRecord(byte *const &cardUID)
 bool Module::readCardUID(byte *&cardUID)
 {
     cardUID = nullptr;
-    
-    // look for new cards
-    if (!m_mfrc522.PICC_IsNewCardPresent())
-        return false;
 
-    // select one of the cards
-    if (!m_mfrc522.PICC_ReadCardSerial())
+    // ignore first 5 return value of isNewCardPresent (sometimes it returns faulty)
+    for (int i = 0; i < 5; i++)
+        isNewCardPresent();
+
+    if (!isNewCardPresent())
         return false;
 
     // return the UID
     cardUID = m_mfrc522.uid.uidByte;
+    return true;
+}
+
+bool Module::isNewCardPresent()
+{
+    // look for new cards
+    if (!m_mfrc522.PICC_IsNewCardPresent() || !m_mfrc522.PICC_ReadCardSerial())
+        return false;
     return true;
 }
