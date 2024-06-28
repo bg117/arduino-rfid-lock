@@ -95,14 +95,14 @@ namespace
     {
         // turn on green LED and relay
         digitalWrite(G_LED_PIN, HIGH);
-        digitalWrite(RELAY_PIN, HIGH);
+        digitalWrite(RELAY_PIN, RELAY_HIGH);
     }
 
     void disengageLock()
     {
         // turn off green LED and relay
         digitalWrite(G_LED_PIN, LOW);
-        digitalWrite(RELAY_PIN, LOW);
+        digitalWrite(RELAY_PIN, RELAY_LOW);
     }
 
     void delayWhileNoNewCard(byte *const &cardUID)
