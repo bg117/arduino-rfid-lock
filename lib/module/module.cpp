@@ -24,6 +24,8 @@ void Module::init()
 
     // initialize the RC522 module
     m_mfrc522.PCD_Init();
+    m_mfrc522.PCD_SetAntennaGain(m_mfrc522.RxGain_max);
+    delay(4); // delay to stabilize the module
 
     // read the access record from EEPROM
     EEPROM.get(0, m_accessRecord);
@@ -64,22 +66,23 @@ bool Module::readCardUID(byte *&cardUID)
 {
     cardUID = nullptr;
 
-    // ignore first 5 return value of isNewCardPresent (sometimes it returns faulty)
-    for (int i = 0; i < 5; i++)
-        isNewCardPresent();
-
-    if (!isNewCardPresent())
+    // look for new cards
+    if (!m_mfrc522.PICC_IsNewCardPresent() || !m_mfrc522.PICC_ReadCardSerial())
         return false;
 
     // return the UID
     cardUID = m_mfrc522.uid.uidByte;
+    m_mfrc522.PICC_HaltA();
     return true;
 }
 
 bool Module::isNewCardPresent()
 {
-    // look for new cards
-    if (!m_mfrc522.PICC_IsNewCardPresent() || !m_mfrc522.PICC_ReadCardSerial())
-        return false;
-    return true;
+    // check if the same card is still present
+    byte bufferATQA[2];
+    byte bufferSize = sizeof(bufferATQA);
+    MFRC522::StatusCode result = m_mfrc522.PICC_WakeupA(bufferATQA, &bufferSize);
+    m_mfrc522.PICC_HaltA();
+
+    return result == MFRC522::STATUS_OK;
 }

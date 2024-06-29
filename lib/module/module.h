@@ -17,6 +17,7 @@ public:
     bool readCardUID(byte *&cardUID);
     bool checkAccess(byte *const &cardUID);
     bool writeAccessRecord(byte *const &cardUID);
+    bool isNewCardPresent();
 
 private:
     // for RC522
@@ -25,6 +26,4 @@ private:
 
     MFRC522 m_mfrc522 = MFRC522(SS_PIN, RST_PIN);
     EEPROMAccessRecord m_accessRecord;
-
-    bool isNewCardPresent();
 };

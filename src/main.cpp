@@ -21,7 +21,7 @@ namespace
     void entryRoutine(byte *const &cardUID);
     void engageLock();
     void disengageLock();
-    void delayWhileNoNewCard(byte *const &cardUID);
+    void delayWhileNoNewCard();
 }
 
 void setup()
@@ -62,7 +62,7 @@ void loop()
         else
             digitalWrite(R_LED_PIN, HIGH); // turn on red LED if failed
 
-        delayWhileNoNewCard(cardUID); // wait for the card to be removed
+        delayWhileNoNewCard(); // wait for the card to be removed
         digitalWrite(G_LED_PIN, LOW);
         digitalWrite(R_LED_PIN, LOW);
     }
@@ -80,13 +80,13 @@ namespace
         if (module.checkAccess(cardUID))
         {
             engageLock();
-            delayWhileNoNewCard(cardUID); // wait for the card to be removed
+            delayWhileNoNewCard();
             disengageLock();
         }
         else
         {
             digitalWrite(R_LED_PIN, HIGH);
-            delayWhileNoNewCard(cardUID); // wait for the card to be removed
+            delayWhileNoNewCard();
             digitalWrite(R_LED_PIN, LOW);
         }
     }
@@ -105,9 +105,8 @@ namespace
         digitalWrite(RELAY_PIN, RELAY_LOW);
     }
 
-    void delayWhileNoNewCard(byte *const &cardUID)
+    void delayWhileNoNewCard()
     {
-        byte *newUID;         // dummy variable
         bool firstRep = true; // first repetition flag
         do
         {
@@ -121,6 +120,6 @@ namespace
             {
                 delay(1000);
             }
-        } while (module.readCardUID(newUID) && newUID == cardUID); // keep reading until a new card is detected
+        } while (module.isNewCardPresent()); // keep reading until new card
     }
 }
