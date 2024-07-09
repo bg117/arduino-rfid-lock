@@ -21,9 +21,9 @@ public:
 
 private:
     // for RC522
-    static constexpr int RST_PIN = 9;
-    static constexpr int SS_PIN = 10;
+    static constexpr int MFRC522_1_RST_PIN = 9;
+    static constexpr int MFRC522_1_SS_PIN = 10;
 
-    MFRC522 m_mfrc522 = MFRC522(SS_PIN, RST_PIN);
+    MFRC522 m_mfrc522_1 = MFRC522(MFRC522_1_SS_PIN, MFRC522_1_RST_PIN);
     EEPROMAccessRecord m_accessRecord;
 };

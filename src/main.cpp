@@ -12,11 +12,8 @@ namespace
     // key lock switch (for override/EEPROM write)
     constexpr int KEY_PIN = 5;
 
-    // relay pin for solenoid lock control
-    constexpr int RELAY_PIN = 6;
-
-    constexpr bool RELAY_LOW = HIGH;
-    constexpr bool RELAY_HIGH = LOW;
+    // MOSFET pin for solenoid lock control
+    constexpr int MOSFET_PIN = 6;
 
     void entryRoutine(byte *const &cardUID);
     void engageLock();
@@ -33,8 +30,8 @@ void setup()
     pinMode(G_LED_PIN, OUTPUT);
     pinMode(Y_LED_PIN, OUTPUT);
     pinMode(KEY_PIN, INPUT);
-    digitalWrite(RELAY_PIN, RELAY_LOW); // turn off the relay (default state)
-    pinMode(RELAY_PIN, OUTPUT);
+    digitalWrite(MOSFET_PIN, LOW); // turn off the MOSFET (default state)
+    pinMode(MOSFET_PIN, OUTPUT);
 }
 
 void loop()
@@ -93,16 +90,16 @@ namespace
 
     void engageLock()
     {
-        // turn on green LED and relay
+        // turn on green LED and MOSFET
         digitalWrite(G_LED_PIN, HIGH);
-        digitalWrite(RELAY_PIN, RELAY_HIGH);
+        digitalWrite(MOSFET_PIN, HIGH);
     }
 
     void disengageLock()
     {
-        // turn off green LED and relay
+        // turn off green LED and MOSFET
         digitalWrite(G_LED_PIN, LOW);
-        digitalWrite(RELAY_PIN, RELAY_LOW);
+        digitalWrite(MOSFET_PIN, LOW);
     }
 
     void delayWhileNoNewCard()

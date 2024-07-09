@@ -17,14 +17,14 @@ bool uidExistsInRecord(byte *const &uid, const EEPROMAccessRecord &record)
 void Module::init()
 {
     // initialize the pins
-    pinMode(RST_PIN, OUTPUT);
-    pinMode(SS_PIN, OUTPUT);
+    pinMode(MFRC522_1_RST_PIN, OUTPUT);
+    pinMode(MFRC522_1_SS_PIN, OUTPUT);
 
     SPI.begin(); // initialize SPI bus
 
     // initialize the RC522 module
-    m_mfrc522.PCD_Init();
-    m_mfrc522.PCD_SetAntennaGain(m_mfrc522.RxGain_max);
+    m_mfrc522_1.PCD_Init();
+    m_mfrc522_1.PCD_SetAntennaGain(m_mfrc522_1.RxGain_max);
     delay(4); // delay to stabilize the module
 
     // read the access record from EEPROM
@@ -67,12 +67,12 @@ bool Module::readCardUID(byte *&cardUID)
     cardUID = nullptr;
 
     // look for new cards
-    if (!m_mfrc522.PICC_IsNewCardPresent() || !m_mfrc522.PICC_ReadCardSerial())
+    if (!m_mfrc522_1.PICC_IsNewCardPresent() || !m_mfrc522_1.PICC_ReadCardSerial())
         return false;
 
     // return the UID
-    cardUID = m_mfrc522.uid.uidByte;
-    m_mfrc522.PICC_HaltA();
+    cardUID = m_mfrc522_1.uid.uidByte;
+    m_mfrc522_1.PICC_HaltA();
     return true;
 }
 
@@ -81,8 +81,8 @@ bool Module::isNewCardPresent()
     // check if the same card is still present
     byte bufferATQA[2];
     byte bufferSize = sizeof(bufferATQA);
-    MFRC522::StatusCode result = m_mfrc522.PICC_WakeupA(bufferATQA, &bufferSize);
-    m_mfrc522.PICC_HaltA();
+    MFRC522::StatusCode result = m_mfrc522_1.PICC_WakeupA(bufferATQA, &bufferSize);
+    m_mfrc522_1.PICC_HaltA();
 
     return result == MFRC522::STATUS_OK;
 }
