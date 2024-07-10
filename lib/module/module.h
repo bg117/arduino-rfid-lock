@@ -2,16 +2,8 @@
 
 #include <MFRC522.h>
 
-// access record on EEPROM
-struct EEPROMAccessRecord
+namespace Module
 {
-    byte count;
-    byte uids[255][4];
-}; // sizeof == 1021; if not, i'll die
-
-class Module
-{
-public:
     void init();
 
     bool readCardUID(byte *&cardUID);
@@ -19,11 +11,16 @@ public:
     bool writeAccessRecord(byte *const &cardUID);
     bool isNewCardPresent();
 
-private:
-    // for RC522
-    static constexpr int MFRC522_1_RST_PIN = 9;
-    static constexpr int MFRC522_1_SS_PIN = 10;
+    void logAccess(byte *const &cardUID, bool accessOrWrite, bool granted);
 
-    MFRC522 m_mfrc522_1 = MFRC522(MFRC522_1_SS_PIN, MFRC522_1_RST_PIN);
-    EEPROMAccessRecord m_accessRecord;
+    void deactivateSDModule();
+    void activateSDModule();
+    
+    // for RC522
+    constexpr int MFRC522_1_RST_PIN = 9;
+    constexpr int MFRC522_1_SS_PIN = 10;
+
+    // for SD card module
+    constexpr int SD_CS_PIN = 7;
+    constexpr int SD_MISO_ACTIVATE_PIN = 8; // really quirky fix for poorly-designed SD card modules (MISO line isn't brought down after use)
 };
