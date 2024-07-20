@@ -1,6 +1,6 @@
-#include <RFIDModule.h>
-
 #include <SPI.h>
+
+#include <RFIDModule.h>
 
 void RFIDModule::init(int ssPin, int rstPin)
 {

@@ -1,8 +1,8 @@
-#include <AccessManager.h>
-
 #include <EEPROM.h>
 #include <SPI.h>
 #include <SD.h>
+
+#include <AccessManager.h>
 
 const char *const LOG_FORMAT PROGMEM = "%04d-%02d-%02dT%02d:%02d:%02dZ %02X%02X%02X%02X %d%c";
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <SD.h>
-
 class AccessManager
 {
 public:
