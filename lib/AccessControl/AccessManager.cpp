@@ -13,7 +13,7 @@ AccessManager::AccessManager(int sdCSPin, int sdMISOActivatePin) : m_sdCSPin(sdC
 void AccessManager::init()
 {
     // initialize the pins
-    Serial.print("\nInitializing SD card...");
+    Serial.print(F("Initializing SD card..."));
 
     // activate MISO line from transistor
     digitalWrite(transistor, HIGH);
@@ -22,16 +22,16 @@ void AccessManager::init()
     // since we're just testing if the card is working!
     if (!SD.begin(SPI_HALF_SPEED, chipSelect))
     {
-        Serial.println("initialization failed. Things to check:");
-        Serial.println("* is a card inserted?");
-        Serial.println("* is your wiring correct?");
-        Serial.println("* did you change the chipSelect pin to match your shield or module?");
+        Serial.println(F("initialization failed. Things to check:"));
+        Serial.println(F("* is a card inserted?"));
+        Serial.println(F("* is your wiring correct?"));
+        Serial.println(F("* did you change the chipSelect pin to match your shield or module?"));
         while (1)
             ;
     }
     else
     {
-        Serial.println("Wiring is correct and a card is present.");
+        Serial.println(F("Wiring is correct and a card is present."));
     }
 
     digitalWrite(transistor, LOW);
