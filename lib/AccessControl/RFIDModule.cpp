@@ -2,12 +2,10 @@
 
 #include <SPI.h>
 
-RFIDModule::RFIDModule(int ssPin, int rstPin) : m_mfrc522(ssPin, rstPin) {}
-
-void RFIDModule::init()
+void RFIDModule::init(int ssPin, int rstPin)
 {
     SPI.begin();
-    m_mfrc522.PCD_Init();
+    m_mfrc522.PCD_Init(ssPin, rstPin);
     m_mfrc522.PCD_SetAntennaGain(m_mfrc522.RxGain_max);
     delay(4);                          // delay to stabilize the module
     m_mfrc522.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader details

@@ -5,9 +5,7 @@
 class AccessManager
 {
 public:
-    AccessManager(int sdCSPin, int sdMISOActivatePin);
-
-    void init();
+    void init(int sdCSPin, int sdMISOActivatePin);
     bool checkAccess(byte *const &detected);
     bool writeAccessRecord(byte *const &cardUID);
     void logAccess(byte *const &cardUID, bool accessOrWrite, bool granted);

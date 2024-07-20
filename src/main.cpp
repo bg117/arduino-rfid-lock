@@ -20,8 +20,8 @@ constexpr int MFRC522_1_SS_PIN = 10;
 constexpr int SD_CS_PIN = 7;
 constexpr int SD_MISO_ACTIVATE_PIN = 8;
 
-RFIDModule rfid(MFRC522_1_SS_PIN, MFRC522_1_RST_PIN);
-AccessManager accessManager(SD_CS_PIN, SD_MISO_ACTIVATE_PIN);
+RFIDModule rfid;
+AccessManager accessManager;
 
 void handleKeyInserted(byte *const &cardUID);
 void entryRoutine(byte *const &cardUID);
@@ -36,8 +36,8 @@ void setup()
     while (!Serial)
         ;
 
-    rfid.init();
-    accessManager.init();
+    rfid.init(MFRC522_1_SS_PIN, MFRC522_1_RST_PIN);
+    accessManager.init(SD_CS_PIN, SD_MISO_ACTIVATE_PIN);
 
     // initialize the pins
     pinMode(R_LED_PIN, OUTPUT);

@@ -5,22 +5,21 @@
 #include <SD.h>
 
 const char *const LOG_FORMAT PROGMEM = "%04d-%02d-%02dT%02d:%02d:%02dZ %02X%02X%02X%02X %d%c";
-const int chipSelect = 7;
-const int transistor = 8;
 
-AccessManager::AccessManager(int sdCSPin, int sdMISOActivatePin) : m_sdCSPin(sdCSPin), m_sdMISOActivatePin(sdMISOActivatePin) {}
-
-void AccessManager::init()
+void AccessManager::init(int sdCSPin, int sdMISOActivatePin)
 {
+    m_sdCSPin = sdCSPin;
+    m_sdMISOActivatePin = sdMISOActivatePin;
+
     // initialize the pins
     Serial.print(F("Initializing SD card..."));
 
     // activate MISO line from transistor
-    digitalWrite(transistor, HIGH);
+    activateSDModule();
 
     // we'll use the initialization code from the utility libraries
     // since we're just testing if the card is working!
-    if (!SD.begin(SPI_HALF_SPEED, chipSelect))
+    if (!SD.begin(SPI_FULL_SPEED, sdCSPin))
     {
         Serial.println(F("initialization failed. Things to check:"));
         Serial.println(F("* is a card inserted?"));
@@ -34,7 +33,7 @@ void AccessManager::init()
         Serial.println(F("Wiring is correct and a card is present."));
     }
 
-    digitalWrite(transistor, LOW);
+    deactivateSDModule();
 }
 
 bool AccessManager::checkAccess(byte *const &detected)

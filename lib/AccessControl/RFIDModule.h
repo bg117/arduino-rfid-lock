@@ -5,9 +5,7 @@
 class RFIDModule
 {
 public:
-    RFIDModule(int ssPin, int rstPin);
-    
-    void init();
+    void init(int ssPin, int rstPin);
     bool readCardUID(byte *&cardUID);
     bool isNewCardPresent();
 
