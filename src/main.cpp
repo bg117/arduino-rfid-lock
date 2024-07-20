@@ -85,9 +85,6 @@ void handleKeyInserted(byte *const &cardUID)
     // try to write the card UID to EEPROM
     bool writeStatus = accessManager.writeAccessRecord(cardUID);
 
-    // log the access attempt
-    accessManager.logAccess(cardUID, true, writeStatus);
-
     if (writeStatus)
         digitalWrite(G_LED_PIN, HIGH); // turn on green LED if successful
     else
@@ -96,15 +93,15 @@ void handleKeyInserted(byte *const &cardUID)
     waitForCardRemoval(); // wait for the card to be removed
     digitalWrite(G_LED_PIN, LOW);
     digitalWrite(R_LED_PIN, LOW);
+
+    // log the access attempt
+    accessManager.logAccess(cardUID, true, writeStatus);
 }
 
 void entryRoutine(byte *const &cardUID)
 {
     // check if the detected card is in the access record
     bool access = accessManager.checkAccess(cardUID);
-
-    // log the access attempt
-    accessManager.logAccess(cardUID, false, access);
 
     if (access)
     {
@@ -118,6 +115,9 @@ void entryRoutine(byte *const &cardUID)
         waitForCardRemoval();
         digitalWrite(R_LED_PIN, LOW);
     }
+
+    // log the access attempt
+    accessManager.logAccess(cardUID, false, access);
 }
 
 void engageLock()
