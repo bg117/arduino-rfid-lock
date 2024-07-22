@@ -1,46 +1,42 @@
-#include <module.h>
-
 #include <EEPROM.h>
 #include <SPI.h>
 #include <SD.h>
 
-MFRC522 mfrc522_1 = MFRC522(Module::MFRC522_1_SS_PIN, Module::MFRC522_1_RST_PIN);
+#include <AccessManager.h>
 
 const char *const LOG_FORMAT PROGMEM = "%04d-%02d-%02dT%02d:%02d:%02dZ %02X%02X%02X%02X %d%c";
 
-bool uidExistsInRecord(byte *const &uid);
-
-void Module::init()
+void AccessManager::init(const int sdCSPin, const int sdMISOActivatePin)
 {
-    // Serial init
-    Serial.begin(9600);
-    while (!Serial)
-        ;
+    m_sdCSPin = sdCSPin;
+    m_sdMISOActivatePin = sdMISOActivatePin;
 
     // initialize the pins
-    pinMode(SD_MISO_ACTIVATE_PIN, OUTPUT);
+    Serial.print(F("Initializing SD card..."));
 
-    // initialize the RC522 module
-    SPI.begin();
-    mfrc522_1.PCD_Init();
-    mfrc522_1.PCD_SetAntennaGain(mfrc522_1.RxGain_max);
-    delay(4);                            // delay to stabilize the module
-    mfrc522_1.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader details
-
-    // initialize the SD module
+    // activate MISO line from transistor
     activateSDModule();
-    if (!SD.begin(SD_CS_PIN))
+
+    // we'll use the initialization code from the utility libraries
+    // since we're just testing if the card is working!
+    if (!SD.begin(SPI_FULL_SPEED, sdCSPin))
     {
-        Serial.println(F("SD card initialization failed!"));
-        // fail
+        Serial.println(F("initialization failed. Things to check:"));
+        Serial.println(F("* is a card inserted?"));
+        Serial.println(F("* is your wiring correct?"));
+        Serial.println(F("* did you change the chipSelect pin to match your shield or module?"));
         while (true)
             ;
+    }
+    else
+    {
+        Serial.println(F("Wiring is correct and a card is present."));
     }
 
     deactivateSDModule();
 }
 
-bool Module::checkAccess(byte *const &detected)
+bool AccessManager::checkAccess(byte *const &detected)
 {
     byte recordCount;
     EEPROM.get(0, recordCount);
@@ -61,7 +57,7 @@ bool Module::checkAccess(byte *const &detected)
     return false;
 }
 
-bool Module::writeAccessRecord(byte *const &cardUID)
+bool AccessManager::writeAccessRecord(byte *const &cardUID)
 {
     byte recordCount;
     EEPROM.get(0, recordCount);
@@ -82,34 +78,7 @@ bool Module::writeAccessRecord(byte *const &cardUID)
     return true;
 }
 
-bool Module::readCardUID(byte *&cardUID)
-{
-    cardUID = nullptr;
-
-    // look for new cards
-    if (!mfrc522_1.PICC_IsNewCardPresent() || !mfrc522_1.PICC_ReadCardSerial())
-        return false;
-
-    // return the UID
-    cardUID = mfrc522_1.uid.uidByte;
-    mfrc522_1.PICC_HaltA();
-
-    return true;
-}
-
-bool Module::isNewCardPresent()
-{
-    // check if the same card is still present
-    byte bufferATQA[2];
-    byte bufferSize = sizeof(bufferATQA);
-    MFRC522::StatusCode result = mfrc522_1.PICC_WakeupA(bufferATQA, &bufferSize);
-    mfrc522_1.PICC_HaltA();
-
-    return result == MFRC522::STATUS_OK;
-}
-
-void Module::logAccess(byte *const &cardUID, bool accessOrWrite, bool granted)
-{
+void AccessManager::logAccess(byte *const &cardUID, const bool accessOrWrite, const bool granted) const {
     activateSDModule();
 
     // open the log file
@@ -137,31 +106,32 @@ void Module::logAccess(byte *const &cardUID, bool accessOrWrite, bool granted)
     deactivateSDModule();
 }
 
-void Module::deactivateSDModule()
+void AccessManager::deactivateSDModule() const
 {
     // deactivate MISO
-    digitalWrite(SD_MISO_ACTIVATE_PIN, LOW);
+    digitalWrite(m_sdMISOActivatePin, LOW);
 }
 
-void Module::activateSDModule()
-{
+void AccessManager::activateSDModule() const {
     // activate MISO
-    digitalWrite(SD_MISO_ACTIVATE_PIN, HIGH);
+    digitalWrite(m_sdMISOActivatePin, HIGH);
 }
 
-bool uidExistsInRecord(byte *const &uid)
+bool AccessManager::uidExistsInRecord(byte *const &uid)
 {
     byte recordCount;
     EEPROM.get(0, recordCount);
 
+    // for each record in the EEPROM
     for (int i = 0; i < recordCount; i++)
     {
         byte record[4];
         EEPROM.get(1 + i * 4, record);
 
+        // compare the UID with the record
         if (memcmp(uid, record, 4) == 0)
-            return true;
+            return true; // exists
     }
 
-    return false;
+    return false; // not exists
 }
