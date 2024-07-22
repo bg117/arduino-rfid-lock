@@ -4,14 +4,15 @@ class AccessManager
 {
 public:
     void init(int sdCSPin, int sdMISOActivatePin);
-    bool checkAccess(byte *const &detected);
-    bool writeAccessRecord(byte *const &cardUID);
-    void logAccess(byte *const &cardUID, bool accessOrWrite, bool granted);
+
+    static bool checkAccess(byte *const &detected);
+    static bool writeAccessRecord(byte *const &cardUID);
+    void logAccess(byte *const &cardUID, bool accessOrWrite, bool granted) const;
 
 private:
-    bool uidExistsInRecord(byte *const &uid);
-    void deactivateSDModule();
-    void activateSDModule();
+    static bool uidExistsInRecord(byte *const &uid);
+    void deactivateSDModule() const;
+    void activateSDModule() const;
     
     int m_sdCSPin;
     int m_sdMISOActivatePin;

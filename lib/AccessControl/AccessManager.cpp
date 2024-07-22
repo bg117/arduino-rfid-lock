@@ -6,7 +6,7 @@
 
 const char *const LOG_FORMAT PROGMEM = "%04d-%02d-%02dT%02d:%02d:%02dZ %02X%02X%02X%02X %d%c";
 
-void AccessManager::init(int sdCSPin, int sdMISOActivatePin)
+void AccessManager::init(const int sdCSPin, const int sdMISOActivatePin)
 {
     m_sdCSPin = sdCSPin;
     m_sdMISOActivatePin = sdMISOActivatePin;
@@ -25,7 +25,7 @@ void AccessManager::init(int sdCSPin, int sdMISOActivatePin)
         Serial.println(F("* is a card inserted?"));
         Serial.println(F("* is your wiring correct?"));
         Serial.println(F("* did you change the chipSelect pin to match your shield or module?"));
-        while (1)
+        while (true)
             ;
     }
     else
@@ -78,8 +78,7 @@ bool AccessManager::writeAccessRecord(byte *const &cardUID)
     return true;
 }
 
-void AccessManager::logAccess(byte *const &cardUID, bool accessOrWrite, bool granted)
-{
+void AccessManager::logAccess(byte *const &cardUID, const bool accessOrWrite, const bool granted) const {
     activateSDModule();
 
     // open the log file
@@ -107,14 +106,13 @@ void AccessManager::logAccess(byte *const &cardUID, bool accessOrWrite, bool gra
     deactivateSDModule();
 }
 
-void AccessManager::deactivateSDModule()
+void AccessManager::deactivateSDModule() const
 {
     // deactivate MISO
     digitalWrite(m_sdMISOActivatePin, LOW);
 }
 
-void AccessManager::activateSDModule()
-{
+void AccessManager::activateSDModule() const {
     // activate MISO
     digitalWrite(m_sdMISOActivatePin, HIGH);
 }
