@@ -2,46 +2,25 @@
 
 #include <MFRC522.h>
 
-// access record on EEPROM
-struct EEPROMAccessRecord
+namespace Module
 {
-    byte count;
-    byte uids[255][4];
-}; // sizeof == 1021; if not, i'll die
-
-class Module
-{
-public:
-    EEPROMAccessRecord accessRecord;
-
     void init();
 
     bool readCardUID(byte *&cardUID);
+    bool checkAccess(byte *const &cardUID);
+    bool writeAccessRecord(byte *const &cardUID);
+    bool isNewCardPresent();
 
-    bool checkAccess(byte *detected);
+    void logAccess(byte *const &cardUID, bool accessOrWrite, bool granted);
 
-    bool writeAccessRecord(byte *cardUID);
-
-    void engageLock();
-    void disengageLock();
-
-    // pins
-
-    // traffic light LEDs
-    static constexpr int R_LED_PIN = 4;
-    static constexpr int G_LED_PIN = 2;
-    static constexpr int Y_LED_PIN = 3;
-
-    // key lock switch (for override/EEPROM write)
-    static constexpr int KEY_PIN = 5;
-
-    // relay pin for solenoid lock control
-    static constexpr int RELAY_PIN = 6;
-
-private:
+    void deactivateSDModule();
+    void activateSDModule();
+    
     // for RC522
-    static constexpr int RST_PIN = 9;
-    static constexpr int SS_PIN = 10;
+    constexpr int MFRC522_1_RST_PIN = 9;
+    constexpr int MFRC522_1_SS_PIN = 10;
 
-    MFRC522 mfrc522 = MFRC522(SS_PIN, RST_PIN);
+    // for SD card module
+    constexpr int SD_CS_PIN = 7;
+    constexpr int SD_MISO_ACTIVATE_PIN = 8; // really quirky fix for poorly-designed SD card modules (MISO line isn't brought down after use)
 };

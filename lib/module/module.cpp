@@ -1,95 +1,167 @@
-#include "module.h"
+#include <module.h>
 
 #include <EEPROM.h>
 #include <SPI.h>
+#include <SD.h>
 
-bool uidExistsInRecord(byte *uid, const EEPROMAccessRecord &record)
-{
-    for (int i = 0; i < record.count; i++)
-    {
-        if (memcmp(uid, record.uids[i], 4) == 0)
-            return true;
-    }
+MFRC522 mfrc522_1 = MFRC522(Module::MFRC522_1_SS_PIN, Module::MFRC522_1_RST_PIN);
 
-    return false;
-}
+const char *const LOG_FORMAT PROGMEM = "%04d-%02d-%02dT%02d:%02d:%02dZ %02X%02X%02X%02X %d%c";
+
+bool uidExistsInRecord(byte *const &uid);
 
 void Module::init()
 {
-    // initialize the pins
-    pinMode(RST_PIN, OUTPUT);
-    pinMode(SS_PIN, OUTPUT);
-    pinMode(R_LED_PIN, OUTPUT);
-    pinMode(G_LED_PIN, OUTPUT);
-    pinMode(Y_LED_PIN, OUTPUT);
-    pinMode(KEY_PIN, INPUT);
-    pinMode(RELAY_PIN, OUTPUT);
+    // Serial init
+    Serial.begin(9600);
+    while (!Serial)
+        ;
 
-    SPI.begin(); // initialize SPI bus
+    // initialize the pins
+    pinMode(SD_MISO_ACTIVATE_PIN, OUTPUT);
 
     // initialize the RC522 module
-    mfrc522.PCD_Init();
+    SPI.begin();
+    mfrc522_1.PCD_Init();
+    mfrc522_1.PCD_SetAntennaGain(mfrc522_1.RxGain_max);
+    delay(4);                            // delay to stabilize the module
+    mfrc522_1.PCD_DumpVersionToSerial(); // Show details of PCD - MFRC522 Card Reader details
 
-    // read the access record from EEPROM
-    EEPROM.get(0, accessRecord);
+    // initialize the SD module
+    activateSDModule();
+    if (!SD.begin(SD_CS_PIN))
+    {
+        Serial.println(F("SD card initialization failed!"));
+        // fail
+        while (true)
+            ;
+    }
+
+    deactivateSDModule();
 }
 
-bool Module::checkAccess(byte *detected)
+bool Module::checkAccess(byte *const &detected)
 {
+    byte recordCount;
+    EEPROM.get(0, recordCount);
+
     // for each record in the accessRecord collection
-    for (int i = 0; i < accessRecord.count; i++)
+    for (int i = 0; i < recordCount; i++)
     {
+        // get the record
+        byte record[4];
+        EEPROM.get(1 + i * 4, record); // 1 byte for the record count,
+                                       // 4 bytes for each record
+
         // compare the detected UID with the stored UID
-        if (memcmp(detected, accessRecord.uids[i], 4) == 0)
+        if (memcmp(detected, record, 4) == 0)
             return true;
     }
 
     return false;
 }
 
-void Module::engageLock()
+bool Module::writeAccessRecord(byte *const &cardUID)
 {
-    // turn on green LED and relay
-    digitalWrite(G_LED_PIN, HIGH);
-    digitalWrite(RELAY_PIN, HIGH);
-}
+    byte recordCount;
+    EEPROM.get(0, recordCount);
 
-void Module::disengageLock()
-{
-    // turn off green LED and relay
-    digitalWrite(G_LED_PIN, LOW);
-    digitalWrite(RELAY_PIN, LOW);
-}
-
-bool Module::writeAccessRecord(byte *cardUID)
-{
     // check if the record is full
-    if (accessRecord.count >= 255)
+    if (recordCount >= 255)
         return false; // record is full; fail
 
     // if exists, return true
-    if (uidExistsInRecord(cardUID, accessRecord))
+    if (uidExistsInRecord(cardUID))
         return true;
 
-    // write the card UID to EEPROM
-    memcpy(accessRecord.uids[accessRecord.count], cardUID, 4); // copy the UID to the collection
-    accessRecord.count++;									   // increment the record count
-    EEPROM.put(0, accessRecord);
+    EEPROM.put(1 + recordCount * 4, cardUID); // write record
+
+    recordCount++;              // increment the record count
+    EEPROM.put(0, recordCount); // write to "count" field
 
     return true;
 }
 
 bool Module::readCardUID(byte *&cardUID)
 {
-    // look for new cards
-    if (!mfrc522.PICC_IsNewCardPresent())
-        return false;
+    cardUID = nullptr;
 
-    // select one of the cards
-    if (!mfrc522.PICC_ReadCardSerial())
+    // look for new cards
+    if (!mfrc522_1.PICC_IsNewCardPresent() || !mfrc522_1.PICC_ReadCardSerial())
         return false;
 
     // return the UID
-    cardUID = mfrc522.uid.uidByte;
+    cardUID = mfrc522_1.uid.uidByte;
+    mfrc522_1.PICC_HaltA();
+
     return true;
+}
+
+bool Module::isNewCardPresent()
+{
+    // check if the same card is still present
+    byte bufferATQA[2];
+    byte bufferSize = sizeof(bufferATQA);
+    MFRC522::StatusCode result = mfrc522_1.PICC_WakeupA(bufferATQA, &bufferSize);
+    mfrc522_1.PICC_HaltA();
+
+    return result == MFRC522::STATUS_OK;
+}
+
+void Module::logAccess(byte *const &cardUID, bool accessOrWrite, bool granted)
+{
+    activateSDModule();
+
+    // open the log file
+    File logFile = SD.open(F("log.txt"), FILE_WRITE);
+
+    if (!logFile)
+    {
+        Serial.println(F("Failed to open log file!"));
+        deactivateSDModule();
+        return;
+    }
+
+    // write the log in the format
+    char buffer[37] = {0};
+    sprintf(buffer, LOG_FORMAT, 1970, 0, 0, 0, 0, 0,        // timestamp
+            cardUID[0], cardUID[1], cardUID[2], cardUID[3], // UID
+            granted ? 1 : 0, accessOrWrite ? 'w' : 'a');    // access status
+
+    logFile.println(buffer);
+    Serial.println(buffer);
+
+    logFile.close();
+
+    // deactivate SD card CS pin
+    deactivateSDModule();
+}
+
+void Module::deactivateSDModule()
+{
+    // deactivate MISO
+    digitalWrite(SD_MISO_ACTIVATE_PIN, LOW);
+}
+
+void Module::activateSDModule()
+{
+    // activate MISO
+    digitalWrite(SD_MISO_ACTIVATE_PIN, HIGH);
+}
+
+bool uidExistsInRecord(byte *const &uid)
+{
+    byte recordCount;
+    EEPROM.get(0, recordCount);
+
+    for (int i = 0; i < recordCount; i++)
+    {
+        byte record[4];
+        EEPROM.get(1 + i * 4, record);
+
+        if (memcmp(uid, record, 4) == 0)
+            return true;
+    }
+
+    return false;
 }
